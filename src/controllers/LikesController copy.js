@@ -5,30 +5,30 @@ class LikesController {
   async create(request, response) {
     try {
       const { like, sad, dislike } = request.body;
-      const user_id = request.user.id;
-      const comment_id = request.params.id;
-      const comment = await knex("comments").where({ id: comment_id }).first();
+      const userId = request.user.id;
+      const commentId = request.params.id;
+      const comment = await knex("comments").where({ id: commentId }).first();
+
       const existingLike = await knex("likes")
         .where({
-          user_id,
-          comment_id,
+          user_id: userId,
+          comment_id: commentId,
           owner_id: comment.user_id,
         })
         .first();
 
       if (existingLike) {
-        if (!like && !sad && !dislike) {
-          await knex("likes").where({ id: existingLike.id }).delete();
-          return response.sendStatus(200);
-        }
-
         await knex("likes")
           .where({
-            user_id,
-            comment_id,
+            user_id: userId,
+            comment_id: commentId,
             owner_id: comment.user_id,
           })
           .update({ like, sad, dislike });
+
+        if (!like && !sad && !dislike) {
+          await knex("likes").where({ id: existingLike.id }).delete();
+        }
 
         return response.sendStatus(200);
       }
@@ -39,7 +39,7 @@ class LikesController {
         dislike,
         comment_id: comment.id,
         owner_id: comment.user_id,
-        user_id,
+        user_id: userId,
       });
 
       return response.sendStatus(201);
